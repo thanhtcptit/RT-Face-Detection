@@ -5,11 +5,9 @@ import cv2
 
 
 class VideoStreamWidget(object):
-    def __init__(self, src=0):
+    def __init__(self, src, flip=False):
         self.capture = cv2.VideoCapture(src)
-        self.count_frame = 0
-        self.last = 0
-        self.fps = 0
+        self.flip = flip
 
         self.thread = Thread(target=self.update, args=())
         self.thread.daemon = True
@@ -22,16 +20,10 @@ class VideoStreamWidget(object):
 
     def get_next_frames(self):
         if self.status:
-            self.count_frame += 1
-            if time.time() - self.last >= 1:
-                self.fps = self.count_frame / (time.time() - self.last)
-                self.count_frame = 0
-                self.last = time.time()
-
             frame = self.maintain_aspect_ratio_resize(
                 self.frame, width=640)
-            cv2.putText(frame, f'FPS: {self.fps}', (10, 30),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, 255)
+            if self.flip:
+                frame = cv2.flip(frame, -1)
             self.status = None
             return frame
         return None
