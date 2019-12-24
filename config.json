@@ -1,0 +1,20 @@
+{
+    local gpu = 0,
+    "detector": {
+        "name": "retina",
+        "prefix": "pretrain/retina/R50/R50",
+        "epoch": 0,
+        "gpu": gpu,
+        "network": "net3"
+    },
+    "featurizer": {
+        "name": "arcface",
+        "prefix": "pretrain/arcface/model-y1-test2/model",
+        "epoch": 0,
+        "gpu": gpu
+    },
+    "vector_search": {
+        "data_file": "data/friends/vector-mobile_facenet.json",
+        "dims": 128
+    }
+}

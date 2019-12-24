@@ -8,9 +8,12 @@ class VideoStreamWidget(object):
     def __init__(self, src, flip=False):
         self.capture = cv2.VideoCapture(src)
         self.flip = flip
+        self.status = None
 
         self.thread = Thread(target=self.update, args=())
         self.thread.daemon = True
+
+    def start(self):
         self.thread.start()
 
     def update(self):
@@ -58,11 +61,11 @@ class VideoStreamWidget(object):
 
 
 if __name__ == '__main__':
-    stream_link = 'http://192.168.1.6:8080/video'
+    stream_link = 'rtsp://admin:Tuan7110@192.168.1.64:554/ch1/main/av_stream'
     video_stream_widget = VideoStreamWidget(stream_link)
+    video_stream_widget.start()
     while True:
         try:
             video_stream_widget.show_frame()
         except AttributeError as ae:
-            print(ae)
             pass
