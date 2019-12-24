@@ -43,11 +43,10 @@ def gen():
             count_frame = 0
             last = time.time()
 
-        cv2.putText(detection_image, f'FPS: {fps}', (10, 30),
+        cv2.putText(detection_image, 'FPS: %.3f' % fps, (10, 30),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.4, 255)
 
         flag, frame = cv2.imencode('.jpg', detection_image)
-        output_frame = None
         if not flag:
             continue
         yield (b'--frame\r\n'
