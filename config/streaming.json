@@ -18,7 +18,8 @@
         "gpu": gpu
     },
     "vector_search": {
-        "run_inplace": 0,
+        "activate": 0,
+        "run_inplace": 1,
         "data_file": "data/friends/vector-mobile_facenet.json",
         "dims": 128,
         "top_k": 30,

@@ -1,12 +1,14 @@
 import os
 import time
+import codecs
 
 import cv2
 import numpy as np
+from tqdm import tqdm
 from skimage import transform
 from nsds.common import Params
 
-from modules.utils import run_command
+from modules.utils import append_json, run_command
 from modules.vector_search import VectorSearch
 from modules.retinaface.model import RetinaFace
 from modules.arcface.model import Face2VecModel
@@ -87,6 +89,14 @@ def rotate_face_center(img, dst, output_size=(112, 112)):
 
 
 def align_face(img, bbox, landmark, output_size=(112, 112), padding=10):
+    if not isinstance(output_size, tuple):
+        if isinstance(output_size, int):
+            output_size = (output_size, output_size)
+        elif isinstance(output_size, list):
+            output_size = tuple(output_size)
+        else:
+            raise ValueError('output_size must be tuple')
+
     face_img, pad_box = crop_face_and_pad(img, bbox, padding)
     landmark = normalize_landmark(pad_box, landmark)
 
@@ -106,20 +116,23 @@ class FaceModelWrapper:
             featurizer_name, **featurizer_params)
 
         vector_search_params = params['vector_search']
-        self._top_k = vector_search_params.pop('top_k')
-        if vector_search_params.pop('run_inplace'):
-            self._vector_search = VectorSearch(
-                vector_search_params['data_file'],
-                vector_search_params['dims']
-            )
+        if vector_search_params['activate']:
+            self._top_k = vector_search_params.pop('top_k')
+            if vector_search_params.pop('run_inplace'):
+                self._vector_search = VectorSearch(
+                    vector_search_params['data_file'],
+                    vector_search_params['dims']
+                )
+            else:
+                print('Start separate process for annoy')
+                annoy_port = vector_search_params.pop('port')
+                run_command("screen -S annoy -dm "
+                            f"python modules/simvec/server.py -p {annoy_port} "
+                            f"-f {vector_search_params['data_file']} "
+                            f"-d {vector_search_params['dims']}")
+                self._vector_search = AnnoyClient(annoy_port)
         else:
-            print('Start separate process for annoy')
-            annoy_port = vector_search_params.pop('port')
-            run_command("screen -S annoy -dm "
-                        f"python modules/simvec/server.py -p {annoy_port} "
-                        f"-f {vector_search_params['data_file']} "
-                        f"-d {vector_search_params['dims']}")
-            self._vector_search = AnnoyClient(annoy_port)
+            self._vector_search = None
 
     @staticmethod
     def from_file(cfg_path):
@@ -133,14 +146,6 @@ class FaceModelWrapper:
     def detect_and_align(self, img, output_size=(112, 112),
                          padding=10, mode='many'):
         assert mode in ['single', 'many']
-        if not isinstance(output_size, tuple):
-            if isinstance(output_size, int):
-                output_size = (output_size, output_size)
-            elif isinstance(output_size, list):
-                output_size = tuple(output_size)
-            else:
-                raise ValueError('output_size must be tuple')
-
         bboxs, landmarks = self.detect_face(img)
         if len(bboxs) == 0 or (len(bboxs) > 1 and mode == 'single'):
             return None
@@ -172,6 +177,7 @@ class FaceModelWrapper:
         return bboxs, landmarks, face_embs
 
     def predict_identity(self, img, threshold=1.0):
+        assert self._vector_search is not None
         bboxs, _, embeddings = self.detect_and_extract_embedding(img)
         if embeddings is None:
             return None, None
@@ -222,10 +228,17 @@ class FaceModelWrapper:
                 continue
             for filename in os.listdir(folder_dir):
                 img = cv2.imread(os.path.join(folder_dir, filename))
-                _, _, emb = self.detect_and_extract_embedding(img, mode=mode)
-                if emb is None:
+                _, _, emb_vectors = self.detect_and_extract_embedding(
+                    img, output_size=output_size, padding=padding, mode=mode,
+                    align=align)
+                if emb_vectors is None:
                     continue
-                embs_data = [{'key': filename, 'embedding': emb[0].tolist()}]
+
+                embs_data = []
+                for emb in emb_vectors:
+                    embs_data.append(
+                        {'key': filename, 'embedding': emb.tolist()})
+
                 append_json(f, embs_data)
         f.close()
 
