@@ -7,7 +7,7 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 
-from face_model import align_face
+from modules.face_model import align_face
 
 
 def visualize_face_detection(model, img):

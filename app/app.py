@@ -1,21 +1,33 @@
 import time
+import argparse
 
 import cv2
 from flask import Flask, render_template, Response
 
-from video_stream import VideoStreamWidget
-from face_model import FaceModelWrapper
-from visualize_detection import visualize_face_detection, \
+from nsds.common import Params
+from modules.video_stream import VideoStreamWidget
+from modules.face_model import FaceModelWrapper
+from modules.visualize_detection import visualize_face_detection, \
     visualize_face_recognition
 
 
-model = FaceModelWrapper.from_file('config.json')
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('config_path', type=str)
+    parser.add_argument('-p', '--port', type=int, default=5005)
+    return parser.parse_args()
+
+
+args = parse_args()
+config = Params.from_file(args.config_path)
+
+stream_config = config.pop('streaming')
+vs = VideoStreamWidget(stream_config['src'], flip=stream_config['flip'])
+
+model = FaceModelWrapper(config)
 
 app = Flask(__name__)
 
-# rtsp://admin:Tuan7110@192.168.1.64:554/ch1/main/av_stream
-video_src = 'rtsp://admin:Tuan7110@192.168.1.64:554/ch1/main/av_stream'
-vs = VideoStreamWidget(video_src, flip=True)
 vs.start()
 time.sleep(0.2)
 
@@ -61,4 +73,4 @@ def video_feed():
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', threaded=True, port=5005)
+    app.run(host='0.0.0.0', threaded=True, port=args.port)

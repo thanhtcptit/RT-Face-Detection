@@ -8,11 +8,11 @@ import mxnet as mx
 from mxnet import ndarray as nd
 import cv2
 
-from retinaface.processing.bbox_transform import clip_boxes
-from retinaface.processing.generate_anchor import generate_anchors_fpn, \
-    anchors_plane
-from retinaface.processing.nms import gpu_nms_wrapper, cpu_nms_wrapper
-from retinaface.processing.bbox_transform import bbox_overlaps
+from modules.retinaface.processing.bbox_transform import clip_boxes
+from modules.retinaface.processing.generate_anchor import \
+    generate_anchors_fpn, anchors_plane
+from modules.retinaface.processing.nms import gpu_nms_wrapper, cpu_nms_wrapper
+from modules.retinaface.processing.bbox_transform import bbox_overlaps
 
 
 class RetinaFace:

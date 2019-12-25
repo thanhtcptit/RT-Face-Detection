@@ -5,9 +5,9 @@ import numpy as np
 from skimage import transform
 from nsds.common import Params
 
-from vector_search import VectorSearch
-from retinaface.model import RetinaFace
-from arcface.model import Face2VecModel
+from modules.vector_search import VectorSearch
+from modules.retinaface.model import RetinaFace
+from modules.arcface.model import Face2VecModel
 
 
 def get_model(name, *args, **kwargs):
@@ -107,7 +107,7 @@ class FaceModelWrapper:
 
     @staticmethod
     def from_file(cfg_path):
-        params = Params.from_file('config.json')
+        params = Params.from_file(cfg_path)
         return FaceModelWrapper(params)
 
     def detect_face(self, img):

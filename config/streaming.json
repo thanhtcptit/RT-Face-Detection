@@ -1,15 +1,19 @@
 {
     local gpu = 0,
+    "streaming": {
+        "src": "rtsp://admin:Tuan7110@192.168.1.64:554/ch1/main/av_stream",
+        "flip": 1
+    },
     "detector": {
         "name": "retina",
-        "prefix": "pretrain/retina/R50/R50",
+        "prefix": "modules/pretrain_models/retina/R50/R50",
         "epoch": 0,
         "gpu": gpu,
         "network": "net3"
     },
     "featurizer": {
         "name": "arcface",
-        "prefix": "pretrain/arcface/model-y1-test2/model",
+        "prefix": "modules/pretrain_models/arcface/model-y1-test2/model",
         "epoch": 0,
         "gpu": gpu
     },
