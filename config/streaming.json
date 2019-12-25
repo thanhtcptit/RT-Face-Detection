@@ -1,8 +1,8 @@
 {
     local gpu = 0,
     "streaming": {
-        "src": "rtsp://admin:Tuan7110@192.168.1.64:554/ch1/main/av_stream",
-        "flip": 1
+        "src": "https://192.168.1.6:8080/video", // "rtsp://admin:Tuan7110@192.168.1.64:554/ch1/main/av_stream",
+        "flip": 0
     },
     "detector": {
         "name": "retina",
@@ -18,7 +18,10 @@
         "gpu": gpu
     },
     "vector_search": {
+        "run_inplace": 0,
         "data_file": "data/friends/vector-mobile_facenet.json",
-        "dims": 128
+        "dims": 128,
+        "top_k": 30,
+        "port": 50051
     }
 }

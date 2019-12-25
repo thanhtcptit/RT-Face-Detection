@@ -1,3 +1,4 @@
+import os
 import time
 import argparse
 
@@ -9,6 +10,8 @@ from modules.video_stream import VideoStreamWidget
 from modules.face_model import FaceModelWrapper
 from modules.visualize_detection import visualize_face_detection, \
     visualize_face_recognition
+
+os.environ['MXNET_CUDNN_AUTOTUNE_DEFAULT'] = '0'
 
 
 def parse_args():
@@ -48,6 +51,7 @@ def gen():
             continue
 
         detection_image = visualize_face_recognition(model, frame)
+        # detection_image = visualize_face_detection(model, frame)
 
         count_frame += 1
         if time.time() - last >= 1:

@@ -33,9 +33,7 @@ def build_video_from_images(image_dir, output_path,
                             image_format='img%01d.png'):
     cmd = (f'ffmpeg -i {image_dir}/{image_format} -vcodec libx264 '
            f'-y {output_path}')
-    p = subprocess.Popen(cmd, shell=True)
-    (output, err) = p.communicate()
-    return output
+    run_command(cmd)
 
 
 def distance(org_vector, target_vector, distance_metric=0):
@@ -59,3 +57,9 @@ def distance(org_vector, target_vector, distance_metric=0):
     else:
         raise 'Undefined distance metric %d' % distance_metric
     return dist
+
+
+def run_command(command):
+    p = subprocess.Popen(command, shell=True)
+    (output, err) = p.communicate()
+    return output

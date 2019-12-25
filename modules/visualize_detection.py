@@ -10,30 +10,34 @@ import matplotlib.pyplot as plt
 from modules.face_model import align_face
 
 
+def draw_bbox_landmark(img, bboxs, landmarks):
+    for i in range(bboxs.shape[0]):
+        box = bboxs[i].astype(np.int)
+        color = (0, 0, 255)
+        cv2.rectangle(img, (box[0], box[1]), (box[2], box[3]),
+                      color, 2)
+        if landmarks is not None:
+            landmark = landmarks[i].astype(np.int)
+            for l in range(landmark.shape[0]):
+                color = (0, 0, 255)
+                if l == 0 or l == 3:
+                    color = (0, 255, 0)
+                cv2.circle(img, (landmark[l][0], landmark[l][1]),
+                           1, color, 2)
+    return img
+
+
 def visualize_face_detection(model, img):
     bboxs, landmarks = model.detect_face(img)
-
     if bboxs is not None:
-        detect_img = img.copy()
-        for i in range(bboxs.shape[0]):
-            box = bboxs[i].astype(np.int)
-            color = (0, 0, 255)
-            cv2.rectangle(detect_img, (box[0], box[1]), (box[2], box[3]),
-                          color, 2)
-            if landmarks is not None:
-                landmark = landmarks[i].astype(np.int)
-                for l in range(landmark.shape[0]):
-                    color = (0, 0, 255)
-                    if l == 0 or l == 3:
-                        color = (0, 255, 0)
-                    cv2.circle(detect_img, (landmark[l][0], landmark[l][1]),
-                               1, color, 2)
-    return detect_img, bboxs, landmarks
+        detection_img = draw_bbox_landmark(img.copy(), bboxs, landmarks)
+    return detection_img
 
 
 def visualize_face_align(model, img):
-    detection_img, bboxs, landmarks = visualize_face_detection(
-        model, img)
+    bboxs, landmarks = model.detect_face(img)
+
+    detection_img = draw_bbox_landmark(img.copy(), bboxs, landmarks)
     img_h, img_w, _ = img.shape
 
     figure = plt.figure(figsize=(8, 8))

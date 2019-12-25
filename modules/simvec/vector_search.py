@@ -37,7 +37,7 @@ class VectorSearch:
                 v = r['embedding']
                 __index_vector(key, v)
 
-    def search(self, vector, k=300):
+    def search(self, vector, k=50):
         status = 0
         ids = []
         scores = []

@@ -1,0 +1,20 @@
+syntax = 'proto3';
+package annoy;
+
+service Annoy {
+  rpc Search (SearchRequest) returns (SearchResponse) {}
+}
+
+message Vector {
+  repeated double elems = 1;
+}
+
+message SearchRequest {
+  Vector vector = 1;
+  int32 k = 2;
+}
+
+message SearchResponse {
+  repeated string ids = 1;
+  repeated double scores = 2;
+}

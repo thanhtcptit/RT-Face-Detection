@@ -1,13 +1,16 @@
 import os
+import time
 
 import cv2
 import numpy as np
 from skimage import transform
 from nsds.common import Params
 
+from modules.utils import run_command
 from modules.vector_search import VectorSearch
 from modules.retinaface.model import RetinaFace
 from modules.arcface.model import Face2VecModel
+from modules.simvec.client import AnnoyClient
 
 
 def get_model(name, *args, **kwargs):
@@ -103,7 +106,20 @@ class FaceModelWrapper:
             featurizer_name, **featurizer_params)
 
         vector_search_params = params['vector_search']
-        self._vector_search = VectorSearch(**vector_search_params)
+        self._top_k = vector_search_params.pop('top_k')
+        if vector_search_params.pop('run_inplace'):
+            self._vector_search = VectorSearch(
+                vector_search_params['data_file'],
+                vector_search_params['dims']
+            )
+        else:
+            print('Start separate process for annoy')
+            annoy_port = vector_search_params.pop('port')
+            run_command("screen -S annoy -dm "
+                        f"python modules/simvec/server.py -p {annoy_port} "
+                        f"-f {vector_search_params['data_file']} "
+                        f"-d {vector_search_params['dims']}")
+            self._vector_search = AnnoyClient(annoy_port)
 
     @staticmethod
     def from_file(cfg_path):
@@ -162,7 +178,9 @@ class FaceModelWrapper:
 
         identities = []
         for emb in embeddings:
-            ids, scores = self._vector_search.search(emb)
+            ids, scores = self._vector_search.search(emb, self._top_k)
+            if not ids:
+                return None, None
             pred_id = list(ids)[0].split('_')[0]
             pred_dist = scores[0]
             if pred_dist <= threshold:
@@ -213,8 +231,9 @@ class FaceModelWrapper:
 
 
 if __name__ == '__main__':
-    params = Params.from_file('config.json')
+    params = Params.from_file('config/streaming.json')
     face_model = FaceModelWrapper(params)
     img = cv2.imread('data/debug/phoebe.jpg')
+    time.sleep(3)
     _, identities = face_model.predict_identity(img)
     print(identities)
