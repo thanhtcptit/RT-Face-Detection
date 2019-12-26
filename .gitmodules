@@ -1,0 +1,3 @@
+[submodule "ml_best_practice"]
+	path = ml_best_practice
+	url = https://git.nextsmarty.com/scm/int/ml_best_practice.git

@@ -1,0 +1,16 @@
+mxnet-cu100mkl
+cython
+numpy==1.16.4
+scipy==1.1.0
+annoy==1.16.2
+Flask==1.1.1
+opencv-python==4.1.1.26
+pillow==6.2.0
+jsonnet==0.14.0
+grpcio==1.16.1
+scikit-image==0.15.0
+scikit-learn==0.21.2
+matplotlib
+ipywidgets
+tqdm
+requests

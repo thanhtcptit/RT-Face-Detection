@@ -48,7 +48,7 @@ class VectorSearch:
 
         I = self.index.get_nns_by_vector(vector, k, -1, True)
 
-        ids = filter(lambda i: i is not None,
-                     [self.key_dict.get(i) for i in I[0]])
+        ids = list(filter(lambda i: i is not None,
+                   [self.key_dict.get(i) for i in I[0]]))
         scores = I[1]
         return ids, scores

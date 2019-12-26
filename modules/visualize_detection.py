@@ -29,8 +29,7 @@ def draw_bbox_landmark(img, bboxs, landmarks):
 
 def visualize_face_detection(model, img):
     bboxs, landmarks = model.detect_face(img)
-    if bboxs is not None:
-        detection_img = draw_bbox_landmark(img.copy(), bboxs, landmarks)
+    detection_img = draw_bbox_landmark(img.copy(), bboxs, landmarks)
     return detection_img
 
 
@@ -77,7 +76,7 @@ def visualize_face_recognition(model, image, dist_thresh=1.0,
     detection_image = cv2.resize(image, output_size)
     bboxs, identities = model.predict_identity(detection_image, dist_thresh)
     if bboxs is None:
-        return image
+        return None
 
     for box, identity in zip(bboxs, identities):
         box = box.astype(np.int)

@@ -9,7 +9,7 @@ from skimage import transform
 from nsds.common import Params
 
 from modules.utils import append_json, run_command
-from modules.vector_search import VectorSearch
+from modules.simvec.vector_search import VectorSearch
 from modules.retinaface.model import RetinaFace
 from modules.arcface.model import Face2VecModel
 from modules.simvec.client import AnnoyClient
@@ -105,18 +105,24 @@ def align_face(img, bbox, landmark, output_size=(112, 112), padding=10):
 
 class FaceModelWrapper:
     def __init__(self, params):
-        detector_params = params['detector']
-        detector_name = detector_params.pop('name')
-        self._detector = get_model(
-            detector_name, **detector_params)
+        if 'detector' in params:
+            detector_params = params['detector']
+            detector_name = detector_params.pop('name')
+            self._detector = get_model(
+                detector_name, **detector_params)
+        else:
+            self._detector = None
 
-        featurizer_params = params['featurizer']
-        featurizer_name = featurizer_params.pop('name')
-        self._featurizer = get_model(
-            featurizer_name, **featurizer_params)
+        if 'featurizer' in params:
+            featurizer_params = params['featurizer']
+            featurizer_name = featurizer_params.pop('name')
+            self._featurizer = get_model(
+                featurizer_name, **featurizer_params)
+        else:
+            self._featurizer = None
 
-        vector_search_params = params['vector_search']
-        if vector_search_params['activate']:
+        if 'vector_search' in params:
+            vector_search_params = params['vector_search']
             self._top_k = vector_search_params.pop('top_k')
             if vector_search_params.pop('run_inplace'):
                 self._vector_search = VectorSearch(
@@ -140,6 +146,7 @@ class FaceModelWrapper:
         return FaceModelWrapper(params)
 
     def detect_face(self, img):
+        assert self._detector is not None
         bboxs, landmarks = self._detector.detect(img)
         return bboxs, landmarks
 
@@ -157,10 +164,11 @@ class FaceModelWrapper:
 
     def detect_and_extract_embedding(self, img, output_size=(112, 112),
                                      padding=10, mode='many', align=True):
+        assert self._featurizer is not None
         assert mode in ['single', 'many']
         bboxs, landmarks = self.detect_face(img)
         if len(bboxs) == 0 or (len(bboxs) > 1 and mode == 'single'):
-            return [None] * 3
+            return [], [], []
         aligned_faces = []
         for bbox, landmark in zip(bboxs, landmarks):
             if align:
@@ -179,15 +187,15 @@ class FaceModelWrapper:
     def predict_identity(self, img, threshold=1.0):
         assert self._vector_search is not None
         bboxs, _, embeddings = self.detect_and_extract_embedding(img)
-        if embeddings is None:
-            return None, None
+        if len(embeddings) == 0:
+            return [], []
 
         identities = []
         for emb in embeddings:
             ids, scores = self._vector_search.search(emb, self._top_k)
-            if not ids:
+            if len(ids) == 0:
                 return None, None
-            pred_id = list(ids)[0].split('_')[0]
+            pred_id = ids[0].split('_')[0]
             pred_dist = scores[0]
             if pred_dist <= threshold:
                 identities.append(pred_id)
@@ -231,7 +239,7 @@ class FaceModelWrapper:
                 _, _, emb_vectors = self.detect_and_extract_embedding(
                     img, output_size=output_size, padding=padding, mode=mode,
                     align=align)
-                if emb_vectors is None:
+                if len(emb_vectors) == 0:
                     continue
 
                 embs_data = []
@@ -247,6 +255,6 @@ if __name__ == '__main__':
     params = Params.from_file('config/streaming.json')
     face_model = FaceModelWrapper(params)
     img = cv2.imread('data/debug/phoebe.jpg')
-    time.sleep(3)
+    time.sleep(1)
     _, identities = face_model.predict_identity(img)
     print(identities)

@@ -75,9 +75,7 @@ target/
 # Jupyter NB Checkpoints
 .ipynb_checkpoints/
 
-# Data directory
-/data/metadata/*
-
 # Exlucde for gitignore
-!genres.csv
+!lib
+
 

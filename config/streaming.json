@@ -1,4 +1,5 @@
 {
+    "mode": 2,
     local gpu = 0,
     "streaming": {
         "src": "https://192.168.1.6:8080/video", // "rtsp://admin:Tuan7110@192.168.1.64:554/ch1/main/av_stream",
@@ -18,7 +19,6 @@
         "gpu": gpu
     },
     "vector_search": {
-        "activate": 0,
         "run_inplace": 1,
         "data_file": "data/friends/vector-mobile_facenet.json",
         "dims": 128,
