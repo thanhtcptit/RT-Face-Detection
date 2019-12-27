@@ -7,18 +7,13 @@ import cv2
 from flask import Flask, render_template, Response
 
 from nsds.common import Params
-from modules.video_stream import VideoStreamWidget
+from modules.utils import load_json, load_gif
 from modules.face_model import FaceModelWrapper
+from modules.video_stream import VideoStreamWidget
 from modules.visualize_detection import visualize_face_detection, \
     visualize_face_recognition
 
 os.environ['MXNET_CUDNN_AUTOTUNE_DEFAULT'] = '0'
-
-
-def load_gif(gif_path):
-    gif = imageio.mimread(gif_path)
-    imgs = [cv2.cvtColor(img, cv2.COLOR_RGB2BGR) for img in gif]
-    return imgs
 
 
 def parse_args():
@@ -29,8 +24,8 @@ def parse_args():
 
 
 args = parse_args()
-config = Params.from_file(args.config_path)
 
+config = Params.from_file(args.config_path)
 stream_config = config.pop('streaming')
 vs = VideoStreamWidget(stream_config['src'], flip=stream_config['flip'])
 
@@ -39,11 +34,13 @@ if stream_mode > 0:
     if stream_mode == 1:
         config.pop('featurizer')
         config.pop('vector_search')
-        process_frame_func = visualize_face_detection
-    else:
-        process_frame_func = visualize_face_recognition
-
     model = FaceModelWrapper(config)
+
+
+if os.path.exists(config['metadata']):
+    metadata = load_json(config.pop('metadata'))
+else:
+    metadata = None
 
 
 app = Flask(__name__)
@@ -71,7 +68,11 @@ def gen():
             continue
 
         if stream_mode > 0:
-            frame = process_frame_func(model, frame)
+            if stream_mode == 1:
+                frame = visualize_face_detection(model, frame)
+            else:
+                frame = visualize_face_recognition(
+                    model, frame, metadata=metadata)
             if frame is None:
                 output_frame = loading_gif[loading_ind]
                 loading_ind = (loading_ind + 1) % len(loading_gif)

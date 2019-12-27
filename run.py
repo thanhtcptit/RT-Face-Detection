@@ -30,6 +30,9 @@ class Index(Subcommand):
         subparser.add_argument('param_path', type=str)
         subparser.add_argument('-d', '--data_dir', type=str)
         subparser.add_argument('-o', '--output_path', type=str)
+        subparser.add_argument('-m', '--mode', type=str,
+                               choices=['single', 'many', 'center'],
+                               default='center')
 
         subparser.set_defaults(func=index_images)
         return subparser
@@ -37,8 +40,11 @@ class Index(Subcommand):
 
 def index_images(args):
     os.environ['MXNET_CUDNN_AUTOTUNE_DEFAULT'] = '0'
-    model = FaceModelWrapper.from_file(args.param_path)
-    model.extract_face_embeddings_dataset(args.data_dir, args.output_path)
+    params = Params.from_file(args.param_path)
+    params.pop('vector_search')
+    model = FaceModelWrapper(params)
+    model.extract_face_embeddings_dataset(args.data_dir, args.output_path,
+                                          mode=args.mode)
 
 
 if __name__ == '__main__':

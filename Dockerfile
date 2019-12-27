@@ -13,17 +13,17 @@ COPY ml_best_practice /project/ml_best_practice
 
 RUN pip3 install -e /project/ml_best_practice/nsds
 
-COPY stream_app /project/stream_app
-
-COPY modules /project/modules
-
 COPY run.py /project/
 
 COPY docker-entrypoint.sh /project/
 
+COPY modules /project/modules
+
 WORKDIR /project/modules/retinaface
 
 RUN make
+
+COPY stream_app /project/stream_app
 
 WORKDIR /project
 

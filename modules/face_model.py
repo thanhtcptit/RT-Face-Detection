@@ -41,6 +41,23 @@ def crop_face_and_pad(img, bbox, padding):
     return img[y1: y2, x1: x2, :], pad_box
 
 
+def get_center_bbox(bboxs, image_shape):
+    bboxs_size = []
+    v_offsets = []
+    h_offsets = []
+    image_center = np.array(image_shape) / 2
+    for box in bboxs:
+        area = (box[2] - box[0]) * (box[3] - box[1])
+        h_offsets.append((box[0] + box[2]) / 2 - image_center[1])
+        v_offsets.append((box[1] + box[3]) / 2 - image_center[0])
+        bboxs_size.append(area)
+
+    bboxs_size = np.array(bboxs_size, dtype=np.int32)
+    offsets = [np.abs(h) + np.abs(v) for h, v in zip(h_offsets, v_offsets)]
+    center_index = np.argmax(bboxs_size - offsets)
+    return center_index
+
+
 def rotate_face_center(img, dst, output_size=(112, 112)):
     if output_size == (112, 96):
         src = np.array([
@@ -145,17 +162,25 @@ class FaceModelWrapper:
         params = Params.from_file(cfg_path)
         return FaceModelWrapper(params)
 
-    def detect_face(self, img):
+    def detect_face(self, img, mode='many'):
         assert self._detector is not None
+        assert mode in ['single', 'many', 'center']
         bboxs, landmarks = self._detector.detect(img)
+
+        if len(bboxs) == 0 or (len(bboxs) > 1 and mode == 'single'):
+            return [], []
+        elif len(bboxs) > 1 and mode == 'center':
+            center_bboxs_index = get_center_bbox(bboxs, img.shape[:2])
+            bboxs, landmarks = [bboxs[center_bboxs_index]], \
+                [landmarks[center_bboxs_index]]
         return bboxs, landmarks
 
     def detect_and_align(self, img, output_size=(112, 112),
                          padding=10, mode='many'):
-        assert mode in ['single', 'many']
-        bboxs, landmarks = self.detect_face(img)
-        if len(bboxs) == 0 or (len(bboxs) > 1 and mode == 'single'):
-            return None
+        bboxs, landmarks = self.detect_face(img, mode=mode)
+        if len(bboxs) == 0:
+            return []
+
         aligned_faces = []
         for bbox, landmark in zip(bboxs, landmarks):
             aligned_faces.append(
@@ -165,10 +190,10 @@ class FaceModelWrapper:
     def detect_and_extract_embedding(self, img, output_size=(112, 112),
                                      padding=10, mode='many', align=True):
         assert self._featurizer is not None
-        assert mode in ['single', 'many']
-        bboxs, landmarks = self.detect_face(img)
-        if len(bboxs) == 0 or (len(bboxs) > 1 and mode == 'single'):
+        bboxs, landmarks = self.detect_face(img, mode=mode)
+        if len(bboxs) == 0:
             return [], [], []
+
         aligned_faces = []
         for bbox, landmark in zip(bboxs, landmarks):
             if align:
@@ -216,7 +241,7 @@ class FaceModelWrapper:
                 img = cv2.imread(os.path.join(folder_dir, filename))
                 aligned_faces = self.detect_and_align(
                     img, output_size, padding)
-                if aligned_faces is None:
+                if len(aligned_faces) == 0:
                     continue
                 aligned_face = aligned_faces[0]
                 output_img_path = os.path.join(output_folder_dir, filename)
@@ -225,7 +250,6 @@ class FaceModelWrapper:
     def extract_face_embeddings_dataset(self, data_dir, output_path,
                                         output_size=(112, 112), padding=10,
                                         mode='single', align=True):
-        assert mode in ['single', 'many']
         if os.path.exists(output_path):
             os.remove(output_path)
 

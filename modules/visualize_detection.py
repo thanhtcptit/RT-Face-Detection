@@ -11,7 +11,7 @@ from modules.face_model import align_face
 
 
 def draw_bbox_landmark(img, bboxs, landmarks):
-    for i in range(bboxs.shape[0]):
+    for i in range(len(bboxs)):
         box = bboxs[i].astype(np.int)
         color = (0, 0, 255)
         cv2.rectangle(img, (box[0], box[1]), (box[2], box[3]),
@@ -72,7 +72,7 @@ def visualize_face_align(model, img):
 
 
 def visualize_face_recognition(model, image, dist_thresh=1.0,
-                               output_size=(640, 480)):
+                               output_size=(640, 480), metadata=None):
     detection_image = cv2.resize(image, output_size)
     bboxs, identities = model.predict_identity(detection_image, dist_thresh)
     if bboxs is None:
@@ -85,6 +85,8 @@ def visualize_face_recognition(model, image, dist_thresh=1.0,
                       color, 2)
 
         if identity:
+            if metadata:
+                identity = metadata[identity]['name']
             cv2.putText(detection_image, identity,
                         (box[0], box[3] + 20),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 0, 255),

@@ -59,6 +59,9 @@ class VideoStreamWidget(object):
 
         return cv2.resize(image, dim, interpolation=inter)
 
+    def release(self):
+        self.capture.release()
+
 
 if __name__ == '__main__':
     stream_link = 'rtsp://admin:Tuan7110@192.168.1.64:554/ch1/main/av_stream'

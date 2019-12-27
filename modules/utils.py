@@ -1,11 +1,19 @@
 import os
 import json
+import codecs
 import requests
 import subprocess
 from io import BytesIO
 
+import cv2
+import imageio
 import numpy as np
 from PIL import Image
+
+
+def load_json(file_path):
+    with codecs.open(file_path, 'r') as f:
+        return json.load(f)
 
 
 def append_json(f, data, close=False):
@@ -17,6 +25,12 @@ def append_json(f, data, close=False):
         f.write(str(strs) + '\n')
     if close and not f.closed:
         f.close()
+
+
+def load_gif(gif_path):
+    gif = imageio.mimread(gif_path)
+    imgs = [cv2.cvtColor(img, cv2.COLOR_RGB2BGR) for img in gif]
+    return imgs
 
 
 def get_image_from_url(url):
