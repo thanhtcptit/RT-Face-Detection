@@ -162,10 +162,10 @@ class FaceModelWrapper:
         params = Params.from_file(cfg_path)
         return FaceModelWrapper(params)
 
-    def detect_face(self, img, mode='many'):
+    def detect_face(self, img, mode='many', bbox_thresh=0.8):
         assert self._detector is not None
         assert mode in ['single', 'many', 'center']
-        bboxs, landmarks = self._detector.detect(img)
+        bboxs, landmarks = self._detector.detect(img, threshold=bbox_thresh)
 
         if len(bboxs) == 0 or (len(bboxs) > 1 and mode == 'single'):
             return [], []
@@ -176,8 +176,9 @@ class FaceModelWrapper:
         return bboxs, landmarks
 
     def detect_and_align(self, img, output_size=(112, 112),
-                         padding=10, mode='many'):
-        bboxs, landmarks = self.detect_face(img, mode=mode)
+                         padding=10, mode='many', bbox_thresh=0.8):
+        bboxs, landmarks = self.detect_face(img, mode=mode,
+                                            bbox_thresh=bbox_thresh)
         if len(bboxs) == 0:
             return []
 
@@ -188,9 +189,11 @@ class FaceModelWrapper:
         return aligned_faces
 
     def detect_and_extract_embedding(self, img, output_size=(112, 112),
-                                     padding=10, mode='many', align=True):
+                                     padding=10, mode='many', align=True,
+                                     bbox_thresh=0.8):
         assert self._featurizer is not None
-        bboxs, landmarks = self.detect_face(img, mode=mode)
+        bboxs, landmarks = self.detect_face(img, mode=mode,
+                                            bbox_thresh=bbox_thresh)
         if len(bboxs) == 0:
             return [], [], []
 
@@ -209,24 +212,25 @@ class FaceModelWrapper:
         face_embs = self._featurizer.get_feature(aligned_faces)
         return bboxs, landmarks, face_embs
 
-    def predict_identity(self, img, threshold=1.0):
+    def predict_identity(self, img, bbox_thresh=0.8, dist_thresh=1.0):
         assert self._vector_search is not None
-        bboxs, _, embeddings = self.detect_and_extract_embedding(img)
+        bboxs, landmarks, embeddings = self.detect_and_extract_embedding(
+            img, bbox_thresh=bbox_thresh)
         if len(embeddings) == 0:
-            return [], []
+            return [], [], []
 
         identities = []
         for emb in embeddings:
             ids, scores = self._vector_search.search(emb, self._top_k)
             if len(ids) == 0:
-                return None, None
+                return None, None, None
             pred_id = ids[0].split('_')[0]
             pred_dist = scores[0]
-            if pred_dist <= threshold:
+            if pred_dist <= dist_thresh:
                 identities.append(pred_id)
             else:
                 identities.append(None)
-        return bboxs, identities
+        return bboxs, landmarks, identities
 
     def detect_and_align_dataset(self, data_dir, output_dir,
                                  output_size=(112, 112), padding=10):

@@ -1,10 +1,10 @@
 {
-    "mode": 2,
-    "metadata": "data/pique/metadata.json",
+    "mode": 0,
+    "metadata": "data/demo/metadata.json",
     local gpu = 0,
     "streaming": {
-        "src": "https://192.168.1.6:8080/video", // "rtsp://admin:Tuan7110@192.168.1.64:554/ch1/main/av_stream",
-        "flip": 0
+        "src": "rtsp://admin:Tuan7110@192.168.1.64:554/ch1/main/av_stream", // "https://192.168.1.6:8080/video" 
+        "flip": 1
     },
     "detector": {
         "name": "retina",
@@ -15,14 +15,14 @@
     },
     "featurizer": {
         "name": "arcface",
-        "prefix": "modules/pretrain_models/arcface/model-y1-test2/model",
+        "prefix": "modules/pretrain_models/arcface/model-r50-am-lfw/model",
         "epoch": 0,
         "gpu": gpu
     },
     "vector_search": {
         "run_inplace": 1,
-        "data_file": "data/pique/vector-mobile_facenet.json",
-        "dims": 128,
+        "data_file": "data/demo/vector-r50.json",
+        "dims": 512,
         "top_k": 10,
         "port": 50051
     }
