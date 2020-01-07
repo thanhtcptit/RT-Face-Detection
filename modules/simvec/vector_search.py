@@ -20,6 +20,7 @@ class VectorSearch:
     def build(self):
         self._index_from_file()
         self.index.build(-1)
+        print('Finish build tree')
 
     def _index_from_file(self):
         def __index_vector(key, v):

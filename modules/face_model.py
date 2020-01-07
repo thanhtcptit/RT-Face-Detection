@@ -212,6 +212,18 @@ class FaceModelWrapper:
         face_embs = self._featurizer.get_feature(aligned_faces)
         return bboxs, landmarks, face_embs
 
+    def get_similar_images(self, img, bbox_thresh=0.8, dist_thresh=1.0):
+        assert self._vector_search is not None
+        bboxs, landmarks, embeddings = self.detect_and_extract_embedding(
+            img, mode='center', bbox_thresh=bbox_thresh)
+        if len(embeddings) == 0:
+            return []
+
+        ids, scores = self._vector_search.search(embeddings[0], self._top_k)
+        if len(ids) == 0:
+            return None
+        return ids
+
     def predict_identity(self, img, bbox_thresh=0.8, dist_thresh=1.0):
         assert self._vector_search is not None
         bboxs, landmarks, embeddings = self.detect_and_extract_embedding(
@@ -253,7 +265,8 @@ class FaceModelWrapper:
 
     def extract_face_embeddings_dataset(self, data_dir, output_path,
                                         output_size=(112, 112), padding=10,
-                                        mode='single', align=True):
+                                        mode='single', align=True,
+                                        append_uid=False):
         if os.path.exists(output_path):
             os.remove(output_path)
 
@@ -270,6 +283,8 @@ class FaceModelWrapper:
                 if len(emb_vectors) == 0:
                     continue
 
+                if append_uid:
+                    filename = f'{folder}_{filename}'
                 embs_data = []
                 for emb in emb_vectors:
                     embs_data.append(

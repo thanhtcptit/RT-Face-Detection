@@ -8,7 +8,7 @@ from concurrent import futures
 
 from modules.simvec.rpc import annoy_pb2
 from modules.simvec.rpc import annoy_pb2_grpc
-from modules.vector_search import VectorSearch
+from modules.simvec.vector_search import VectorSearch
 
 
 _ONE_DAY_IN_SECONDS = 60 * 60 * 24

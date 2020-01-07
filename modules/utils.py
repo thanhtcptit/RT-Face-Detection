@@ -1,12 +1,14 @@
 import os
 import json
 import codecs
+import base64
 import requests
 import subprocess
 from io import BytesIO
 
 import cv2
 import imageio
+import skimage
 import numpy as np
 from PIL import Image
 
@@ -48,6 +50,40 @@ def build_video_from_images(image_dir, output_path,
     cmd = (f'ffmpeg -i {image_dir}/{image_format} -vcodec libx264 '
            f'-y {output_path}')
     run_command(cmd)
+
+
+def encode_base64_from_file(image_path):
+    return base64.b64encode(open(image_path, 'rb').read()).decode()
+
+
+def encode_based64(image):
+    flag, frame = cv2.imencode('.jpg', image)
+    return base64.b64encode(frame).decode()
+
+
+def decode_base64(base64_string):
+    bytedata = base64.b64decode(base64_string)
+    buffer = np.frombuffer(bytedata, dtype=np.uint8)
+    img = cv2.imdecode(buffer, flags=1)
+    return img
+
+
+def maintain_aspect_ratio_resize(image, width=None, height=None,
+                                 inter=cv2.INTER_AREA):
+    dim = None
+    (h, w) = image.shape[:2]
+
+    if width is None and height is None:
+        return image
+
+    if width is None:
+        r = height / float(h)
+        dim = (int(w * r), height)
+    else:
+        r = width / float(w)
+        dim = (width, int(h * r))
+
+    return cv2.resize(image, dim, interpolation=inter)
 
 
 def distance(org_vector, target_vector, distance_metric=0):

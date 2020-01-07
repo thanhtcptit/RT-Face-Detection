@@ -15,8 +15,6 @@ RUN pip3 install -e /project/ml_best_practice/nsds
 
 COPY run.py /project/
 
-COPY docker-entrypoint.sh /project/
-
 COPY modules /project/modules
 
 WORKDIR /project/modules/retinaface
@@ -25,9 +23,13 @@ RUN make
 
 COPY stream_app /project/stream_app
 
+COPY demo_app /project/demo_app
+
+COPY docker-entrypoint.sh /project/
+
 WORKDIR /project
 
-EXPOSE $STREAM_PORT
+EXPOSE $UI_PORT
 
 EXPOSE $CAMERA_PORT
 

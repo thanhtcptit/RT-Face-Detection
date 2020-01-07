@@ -3,6 +3,8 @@ from threading import Thread
 
 import cv2
 
+from modules.utils import maintain_aspect_ratio_resize
+
 
 class VideoStreamWidget(object):
     def __init__(self, src, flip=False):
@@ -23,7 +25,7 @@ class VideoStreamWidget(object):
 
     def get_next_frames(self):
         if self.status:
-            frame = self.maintain_aspect_ratio_resize(
+            frame = maintain_aspect_ratio_resize(
                 self.frame, width=640)
             if self.flip:
                 frame = cv2.flip(frame, -1)
@@ -41,23 +43,6 @@ class VideoStreamWidget(object):
             self.capture.release()
             cv2.destroyAllWindows()
             exit(1)
-
-    def maintain_aspect_ratio_resize(self, image, width=None, height=None,
-                                     inter=cv2.INTER_AREA):
-        dim = None
-        (h, w) = image.shape[:2]
-
-        if width is None and height is None:
-            return image
-
-        if width is None:
-            r = height / float(h)
-            dim = (int(w * r), height)
-        else:
-            r = width / float(w)
-            dim = (width, int(h * r))
-
-        return cv2.resize(image, dim, interpolation=inter)
 
     def release(self):
         self.capture.release()

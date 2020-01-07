@@ -44,7 +44,7 @@ def index_images(args):
     params.pop('vector_search')
     model = FaceModelWrapper(params)
     model.extract_face_embeddings_dataset(args.data_dir, args.output_path,
-                                          mode=args.mode)
+                                          mode=args.mode, append_uid=True)
 
 
 if __name__ == '__main__':

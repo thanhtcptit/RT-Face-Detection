@@ -1,5 +1,6 @@
 mxnet-cu100mkl
 cython
+dash==1.7.0
 numpy==1.16.4
 scipy==1.1.0
 annoy==1.16.2
