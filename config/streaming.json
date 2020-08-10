@@ -1,10 +1,10 @@
 {
     "mode": 0,
-    "data_dir": "data/pique/images",
-    "metadata": "data/pique/metadata.json",
+    "data_dir": "data/images",
+    "metadata": "data/metadata.json",
     local gpu = 0,
     "streaming": {
-        "src": "rtsp://admin:Tuan7110@192.168.1.64:554/ch1/main/av_stream", // "https://192.168.1.6:8080/video" 
+        "src": "https://192.168.1.6:8080/video",
         "flip": 1
     },
     "detector": {

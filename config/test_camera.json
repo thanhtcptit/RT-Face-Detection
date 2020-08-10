@@ -1,0 +1,10 @@
+{
+    "mode": 0,
+    "data_dir": "data/images",
+    "metadata": "data/metadata.json",
+    local gpu = 0,
+    "streaming": {
+        "src": "https://192.168.1.6:8080/video",
+        "flip": 1
+    }
+}
